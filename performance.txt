@@ -1,0 +1,35 @@
+Env: my virtual machine
+1000 batches
+=========================
+Debug version:
+/usr/local/clang_9.0.0/bin/clang++ -g -std=gnu++17 -o CMakeFiles/project.dir/main.cpp.o -c /home/jsong/source/jit_vectorize/main.cpp
+
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-debug$ time  taskset 0x1 ./project
+
+real    0m1.475s
+user    0m1.470s
+sys     0m0.004s
+
+
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-debug$ time ./project
+
+real    0m1.525s
+user    0m1.520s
+sys     0m0.004s
+
+
+Optimized version:
+/usr/local/clang_9.0.0/bin/clang++    -O3 -DNDEBUG   -std=gnu++17 -o CMakeFiles/project.dir/main.cpp.o -c /home/jsong/source/jit_vectorize/main.cpp
+
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time ./project
+
+real    0m0.265s
+user    0m0.264s
+sys     0m0.000s
+
+
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time taskset 0x1 ./project
+
+real    0m0.221s
+user    0m0.221s
+sys     0m0.000s

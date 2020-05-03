@@ -7,6 +7,8 @@
 #include <cstring>
 
 
+const uint32_t BATCHES = 100000;
+
 
 /**
  * Memory management rules
@@ -227,6 +229,7 @@ public:
 
     virtual ~ValColDAGNode() {
         delete right_;
+        delete right_vec_;
     }
 
     int getLeftChildType() final {
@@ -318,6 +321,8 @@ public:
     virtual ~ColColDAGNode() {
         delete left_;
         delete right_;
+        delete left_vec_;
+        delete right_vec_;
     }
 
     int getLeftChildType() final {
@@ -569,11 +574,16 @@ public:
         // fill each col using a random numbers
         for (const auto& name : columns_) {
             DbVector* v = br->data[name];
+            /*
             for (uint32_t i = 0; i < n; i++) {
                 v->col[i] = (int32_t)rand();
             }
+            */
         }
 
+        num_of_batches_--;
+
+        // printf("%d batch\n", BATCHES-num_of_batches_);
         return br;
     }
 };
@@ -613,7 +623,7 @@ public:
             if (rs == nullptr)
                 break;
 
-            rs->print();
+            // rs->print();
             delete rs;
         }
     }
@@ -622,7 +632,7 @@ public:
 
 QueryPlan *compileQuery() {
     std::vector<std::string> col_names{"extprice", "discount", "tax"};
-    ScanOperator *scan_op = new ScanOperator(5, col_names);
+    ScanOperator *scan_op = new ScanOperator(BATCHES, col_names);
 
     ValColDAGNode *oneMinusDiscount = new ValColDAGNode(OP_SUB, 1, "discount");
     ColColDAGNode *extpriceMul = new ColColDAGNode(OP_MUL, "extprice", oneMinusDiscount);
