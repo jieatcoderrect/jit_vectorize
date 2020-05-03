@@ -1,2 +1,2 @@
-1. test
-2. get rid of memcpy from the raw data of mscan
+1. get a machine with the latest perf support
+2.

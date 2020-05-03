@@ -33,3 +33,16 @@ jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time taskset 0x1 ./proj
 real    0m0.221s
 user    0m0.221s
 sys     0m0.000s
+
+
+JIT-mimic version:
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time taskset 0x1 ./project
+
+real    0m0.118s
+user    0m0.118s
+sys     0m0.000s
+jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time taskset 0x1 ./project
+
+real    0m0.126s
+user    0m0.124s
+sys     0m0.000s

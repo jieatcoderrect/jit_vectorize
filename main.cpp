@@ -544,6 +544,61 @@ private:
 };
 
 
+class CompiledProjectOperator : public BaseOperator {
+private:
+    BaseOperator* next_;
+    std::string col_name_;
+
+public:
+    CompiledProjectOperator(BaseOperator *next, std::string col_name) :
+        next_(next), col_name_(std::move(col_name)) {
+    }
+
+    ~CompiledProjectOperator() final {
+        delete next_;
+    }
+
+    void open() {
+        next_->open();
+    }
+
+    void close() {
+        next_->close();
+    }
+
+    BatchResult* next() {
+        std::unique_ptr<BatchResult> br(next_->next());
+        if (br == nullptr)
+            return nullptr;
+
+        DbVector* vec = nullptr;
+        evaluateExpr_(&vec, br.get());
+
+        BatchResult* rs = new BatchResult();
+        rs->add(col_name_, vec);
+        return rs;
+    }
+
+private:
+    // evaluate the expression - extprice * (1 - discount) * (1 + tax)
+    uint32_t evaluateExpr_(DbVector** res, BatchResult* input) {
+        uint32_t n = input->getn();
+        int32_t *extprice = input->getCol("extprice")->col;
+        int32_t *discount = input->getCol("discount")->col;
+        int32_t *tax = input->getCol("tax")->col;
+
+        *res = new DbVector(n);
+        int32_t *r = (*res)->col;
+
+        for (uint32_t i = 0; i < n; i++) {
+            r[i] = extprice[i] * (1 - discount[i]) * (1 + tax[i]);
+        }
+
+        return n;
+    }
+};
+
+
 class ScanOperator : public BaseOperator {
 private:
     uint32_t num_of_batches_;
@@ -644,8 +699,18 @@ QueryPlan *compileQuery() {
 }
 
 
+QueryPlan *compileQueryWithJit() {
+    std::vector<std::string> col_names{"extprice", "discount", "tax"};
+    ScanOperator *scan_op = new ScanOperator(BATCHES, col_names);
+
+    CompiledProjectOperator *proj_op = new CompiledProjectOperator(scan_op, "bonus");
+    return new QueryPlan(proj_op);
+}
+
+
 int main(int argc, char*argv[]) {
-    QueryPlan *query_plan = compileQuery();
+    // QueryPlan *query_plan = compileQuery();
+    QueryPlan *query_plan = compileQueryWithJit();
     query_plan->open();
     query_plan->printResultSet();
     query_plan->close();
