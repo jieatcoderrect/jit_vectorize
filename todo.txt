@@ -1,2 +1,2 @@
-1. get a machine with the latest perf support
-2.
+1. scan_operator batchresult
+2. sel_operator batchresult

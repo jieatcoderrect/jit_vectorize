@@ -46,3 +46,10 @@ jsong@ubuntu:~/source/jit_vectorize/cmake-build-release$ time taskset 0x1 ./proj
 real    0m0.126s
 user    0m0.124s
 sys     0m0.000s
+
+
+conjunctive
+==================
+1. baseline - 2.7s (scan_op initialize the data)
+2. vectorization-only, branching - 3.36s = 660ms
+3. vectorization-only, non-branching - 2.80s = 100ms

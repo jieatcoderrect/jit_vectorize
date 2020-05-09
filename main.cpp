@@ -709,8 +709,8 @@ QueryPlan *compileQueryWithJit() {
 
 
 int main(int argc, char*argv[]) {
-    // QueryPlan *query_plan = compileQuery();
-    QueryPlan *query_plan = compileQueryWithJit();
+    QueryPlan *query_plan = compileQuery();
+    // QueryPlan *query_plan = compileQueryWithJit();
     query_plan->open();
     query_plan->printResultSet();
     query_plan->close();

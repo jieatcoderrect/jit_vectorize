@@ -12,3 +12,5 @@ message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}s")
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
 add_executable(project main.cpp)
+add_executable(disjunctive main_disjunctive.cpp)
+add_executable(conjunctive main_conjunctive.cpp common.h)
