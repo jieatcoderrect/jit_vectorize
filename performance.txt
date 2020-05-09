@@ -48,8 +48,10 @@ user    0m0.124s
 sys     0m0.000s
 
 
-conjunctive
+conjunctive (selectivity=0.5)
 ==================
 1. baseline - 2.7s (scan_op initialize the data)
 2. vectorization-only, branching - 3.36s = 660ms
 3. vectorization-only, non-branching - 2.80s = 100ms
+4. jit, branching - 3.26s = 560ms
+5. jit, nonbranching - 3.171s = 470ms

@@ -213,12 +213,75 @@ public:
 };
 
 
+class SelectJitOperator : public BaseOperator {
+private:
+    BaseOperator* next_;
+    bool branching_;
+
+public:
+    SelectJitOperator(BaseOperator *next, bool branching) :
+        next_(next), branching_(branching) {
+    }
+
+    ~SelectJitOperator() final {
+        delete next_;
+    }
+
+    void open() {
+        next_->open();
+    }
+
+    void close() {
+        next_->close();
+    }
+
+    BatchResult* next() {
+        BatchResult *br = next_->next();
+        if (br == nullptr)
+            return br;
+
+        uint32_t n = br->getn();
+        int32_t *tax = br->getCol("tax")->col;
+        int32_t *discount = br->getCol("discount")->col;
+        int32_t *extprice = br->getCol("extprice")->col;
+
+        DbVector<uint32_t> *res_sel = new DbVector<uint32_t>(n);
+        auto res_sel_col = res_sel->col;
+        uint32_t res = 0;
+        if (branching_) {
+            for (uint32_t i = 0; i < n; i++) {
+                if (tax[i] < 50 && discount[i] < 50 && extprice[i] < 50)
+                    res_sel_col[res++] = i;
+            }
+        }
+        else {
+            for (uint32_t i = 0; i < n; i++) {
+                res_sel_col[res] = i;
+                res += (tax[i] < 50 && discount[i] < 50 && extprice[i] < 50);
+            }
+        }
+        res_sel->n = res;
+        br->res_sel = res_sel;
+
+        // std::cout << "n=" << res_sel->n << ", capacity=" << res_sel->capacity << ", col=" << (uint64_t)res_sel->col << "\n";
+        return br;
+    }
+};
+
+
+
 /************************************************************************
  *
  * Query compiler
  *
  **************************************************************************/
 
+
+QueryPlan *compileQuery_Baseline() {
+    std::vector<std::string> col_names{"extprice", "discount", "tax"};
+    ScanOperator *scan_op = new ScanOperator(BATCHES, col_names, true, 100);
+    return new QueryPlan(scan_op, false);
+}
 
 
 QueryPlan *compileQuery_VectorizationOnly_Branching() {
@@ -247,8 +310,24 @@ QueryPlan *compileQuery_VectorizationOnly_NonBranching() {
 }
 
 
+QueryPlan *compileQuery_JIT_Branching() {
+    std::vector<std::string> col_names{"extprice", "discount", "tax"};
+    ScanOperator *scan_op = new ScanOperator(BATCHES, col_names, true, 100);
+    SelectJitOperator *sel_op = new SelectJitOperator(scan_op, true);
+    return new QueryPlan(sel_op, false);
+}
+
+
+QueryPlan *compileQuery_JIT_NonBranching() {
+    std::vector<std::string> col_names{"extprice", "discount", "tax"};
+    ScanOperator *scan_op = new ScanOperator(BATCHES, col_names, true, 100);
+    SelectJitOperator *sel_op = new SelectJitOperator(scan_op, false);
+    return new QueryPlan(sel_op, false);
+}
+
+
 int main(int argc, char*argv[]) {
-    QueryPlan *query_plan = compileQuery_VectorizationOnly_NonBranching();
+    QueryPlan *query_plan = compileQuery_JIT_NonBranching();
     query_plan->open();
     query_plan->printResultSet();
     query_plan->close();

@@ -30,6 +30,7 @@ struct DbVector {
     }
 
     ~DbVector() {
+        // std::cout << (uint64_t)col << " deleted\n";
         delete col;
     }
 };
@@ -39,7 +40,7 @@ struct BatchResult {
     std::map<std::string, DbVector<int32_t>*> data;
     DbVector<uint32_t> *res_sel;
 
-    BatchResult(const std::vector<std::string>& col_names, uint32_t n) {
+    BatchResult(const std::vector<std::string>& col_names, uint32_t n) : res_sel(nullptr) {
         for (const auto& name : col_names) {
             DbVector<int32_t>* v = new DbVector<int32_t>(n);
             data[name] = v;
