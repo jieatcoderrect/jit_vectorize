@@ -49,9 +49,16 @@ sys     0m0.000s
 
 
 conjunctive (selectivity=0.5)
-==================
+==============================
 1. baseline - 2.7s (scan_op initialize the data)
 2. vectorization-only, branching - 3.36s = 660ms
 3. vectorization-only, non-branching - 2.80s = 100ms
 4. jit, branching - 3.26s = 560ms
 5. jit, nonbranching - 3.171s = 470ms
+
+
+synthesis (selectivity=0.5)
+==============================
+1. baseline = 3156ms
+2. compute-all + non-branching vec-only selection + compiled projection = 4060ms = 904ms
+3. non-compute-all + non-branching vec-only selection + compiled projection = 4216ms = 1060ms

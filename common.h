@@ -63,6 +63,13 @@ struct BatchResult {
     }
 
 
+    void remove(const std::string& col_name) {
+        auto vec = data[col_name];
+        data.erase(col_name);
+        delete vec;
+    }
+
+
     DbVector<int32_t>* getCol(const std::string& col_name) {
         return data[col_name];
     }
@@ -159,7 +166,7 @@ public:
         if (num_of_batches_ == 0)
             return nullptr;
 
-        uint32_t n = 1000;
+        uint32_t n = 1024;
         BatchResult *br = new BatchResult(columns_, n);
         // fill each col using a random numbers
         for (const auto& name : columns_) {
