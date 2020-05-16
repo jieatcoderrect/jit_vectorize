@@ -59,6 +59,6 @@ conjunctive (selectivity=0.5)
 
 synthesis (selectivity=0.5)
 ==============================
-1. baseline = 3156ms
-2. compute-all + non-branching vec-only selection + compiled projection = 4060ms = 904ms
-3. non-compute-all + non-branching vec-only selection + compiled projection = 4216ms = 1060ms
+1. baseline = 2939ms
+2. compute-all + non-branching vec-only selection + compiled projection = 3114ms = 174ms
+3. non-compute-all + non-branching vec-only selection + compiled projection = 3166ms = 227ms

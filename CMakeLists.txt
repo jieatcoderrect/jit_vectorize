@@ -4,9 +4,9 @@ project(project)
 set(CMAKE_CXX_STANDARD 17)
 
 
-# if(${CMAKE_BUILD_TYPE} MATCHES "Release")
-#     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3")
-# endif()
+#if(${CMAKE_BUILD_TYPE} MATCHES "Release")
+#    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -mavx2")
+#endif()
 
 message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}s")
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")

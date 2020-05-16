@@ -277,7 +277,7 @@ QueryPlan *compileQuery_ComputeAll() {
     std::vector<std::string> col_names{"extprice", "discount", "tax"};
     ScanOperator *scan_op = new ScanOperator(BATCHES, col_names, true, 100);
     std::vector<CondDAGNode*> expr{};
-    expr.push_back(new ColValCondDAGNode(COND_LT, "tax", 50));
+    expr.push_back(new ColValCondDAGNode(COND_LT, "tax", 90));
 
     auto sel_op = new SelectVectorizationOnlyNonBranchingOperator(scan_op, expr);
     auto proj_op = new ProjectJitComputeAllOperator(sel_op);
@@ -289,7 +289,7 @@ QueryPlan *compileQuery_NonComputeAll() {
     std::vector<std::string> col_names{"extprice", "discount", "tax"};
     ScanOperator *scan_op = new ScanOperator(BATCHES, col_names, true, 100);
     std::vector<CondDAGNode*> expr{};
-    expr.push_back(new ColValCondDAGNode(COND_LT, "tax", 50));
+    expr.push_back(new ColValCondDAGNode(COND_LT, "tax", 90));
 
     auto sel_op = new SelectVectorizationOnlyNonBranchingOperator(scan_op, expr);
     auto proj_op = new ProjectJitNonComputeAllOperator(sel_op);
