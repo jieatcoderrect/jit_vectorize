@@ -15,3 +15,5 @@ add_executable(project main.cpp)
 add_executable(disjunctive main_disjunctive.cpp)
 add_executable(conjunctive main_conjunctive.cpp common.h)
 add_executable(synthesis main_synthesis.cpp common.h)
+
+add_executable(simpleinterp bfjit/simpleinterp.cpp)
