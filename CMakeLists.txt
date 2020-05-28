@@ -17,3 +17,4 @@ add_executable(conjunctive main_conjunctive.cpp common.h)
 add_executable(synthesis main_synthesis.cpp common.h)
 
 add_executable(simpleinterp bfjit/simpleinterp.cpp)
+add_executable(simplevm bfjit/simplevm.cpp)
