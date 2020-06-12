@@ -1,10 +1,14 @@
 #include <iostream>
-#include <cstring>>
+#include <cstring>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sstream>
-
+#include <fstream>
+#include <dlfcn.h>
+#include <array>
+#include <memory>
+#include <cstdio>
 
 constexpr size_t TAPE_SIZE = 30000;
 
@@ -34,7 +38,15 @@ constexpr int32_t JZ = 7;
 constexpr int32_t JMP = 8;
 
 
-void ConvertToBytecode(char ch, int32_t count, int32_t *program, size_t *sz) {
+static void writeFile(const std::string& path, const std::string& data) {
+    std::ofstream myfile;
+    myfile.open (path);
+    myfile << data;
+    myfile.close();
+}
+
+
+static void ConvertToBytecode(char ch, int32_t count, int32_t *program, size_t *sz) {
     size_t loc = *sz;
     bool done = true;
 
@@ -154,7 +166,7 @@ int32_t* Compile(const std::string& src_code, size_t *rsz) {
 }
 
 
-static std::string CompileJit(int32_t *program, size_t sz) {
+static std::string CompileJit(int32_t *program, size_t sz, const std::string& funcname) {
     std::ostringstream out;
     std::string indention = "    ";
 
@@ -165,7 +177,9 @@ static std::string CompileJit(int32_t *program, size_t sz) {
     //    char ch;
     //
     //
-    out << "static void jitfunc_" << rand() << "(uint8_t* tape) {\n";
+    out << "#include <unistd.h>\n"
+           "#include <cstdint>\n";
+    out << "extern \"C\" void "<< funcname << "(uint8_t* tape) {\n";
     out << "    int dataptr = 0;\n";
     out << "    char ch;\n\n";
 
@@ -214,7 +228,7 @@ static std::string CompileJit(int32_t *program, size_t sz) {
                 //
                 // write(1, (char)tape[data[tr], 1);
                 //
-                out << indention << "write(1, (char)tape[dataptr], 1);\n";
+                out << indention << "write(1, tape+dataptr, 1);\n";
                 break;
 
             case JZ:
@@ -237,9 +251,34 @@ static std::string CompileJit(int32_t *program, size_t sz) {
 }
 
 
+static std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+
+/**
+ * We assume the source file is funcname.cpp and the SO file
+ * will be named funcname.so
+ */
+static void  compileToDynalib(char *funcname) {
+    char cmdline[256];
+    sprintf(cmdline, "clang++ -shared -fpic %s.cpp -o %s.so", funcname, funcname);
+    exec(cmdline);
+}
+
+
 int main(int argc, char** argv) {
     if (argc != 2) {
-        std::cout << "Usage: simplevm <sourcefile>\n";
+        std::cout << "Usage: bytecodejit <sourcefile>\n";
         exit(1);
     }
 
@@ -261,16 +300,52 @@ int main(int argc, char** argv) {
     std::string src_code(buf, n);
     size_t sz = 0;
     int32_t *program = Compile(src_code, &sz);
+    std::cout << "Compilte to byte code\n";
 
     // compile bytecode to a function in c
-    std::string cSrc = CompileJit(program, sz);
-    std::cout << cSrc << "\n";
+    char funcname[64];
+    sprintf(funcname, "jitfunc_%d", rand());
+    std::string cSrc = CompileJit(program, sz, funcname);
+    std::cout << "Convert byte code to C\n";
 
     // call LLVM JIT API to compile it into x64 code
     // todo
 
+    // save the file to disk and compile it into a .so file
+    std::string src_path(funcname);
+    src_path += ".cpp";
+    writeFile(src_path.c_str(), cSrc);
+    compileToDynalib(funcname);
+    std::cout << "Compile C to SO file\n";
+
     uint8_t *tape = new uint8_t[TAPE_SIZE];
-    // call the code to
+    char* error;
+    void (*fn)(uint8_t *);
+
+    // load library
+    std::string so_file_path = std::string(funcname) + ".so";
+    void *lib_handle = dlopen(so_file_path.c_str(), RTLD_LAZY);
+    if (!lib_handle)
+    {
+        fprintf(stderr, "%s\n", dlerror());
+        exit(1);
+    }
+
+    // obtain the function handler
+    *(void **)(&fn) = dlsym(lib_handle, funcname);
+    if ((error = dlerror()) != NULL)
+    {
+        fprintf(stderr, "%s\n", error);
+        exit(1);
+    }
+
+    (*fn)(tape);
 
     delete []tape;
+
+    // release library
+    dlclose(lib_handle);
+
+    std::remove(so_file_path.c_str());
+    std::remove(src_path.c_str());
 }

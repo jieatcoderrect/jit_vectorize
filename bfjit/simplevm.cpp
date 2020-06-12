@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstring>>
+#include <cstring>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -55,8 +55,8 @@ public:
     }
 
     ~BrainFuckVM() {
-        delete tape_;
-        delete program_;
+        delete []tape_;
+        delete []program_;
     }
 
 public:
